@@ -1,8 +1,19 @@
 // ran "nest g controller users" to generate this file
 
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
@@ -30,12 +41,18 @@ export class UsersController {
   }
 
   @ApiOkResponse({ type: UserEntity, description: 'Gets a User by their ID' })
+  @ApiNotFoundResponse()
   @Get(':id')
-  getUserById(@Param('id') id: string): UserEntity {
-    return this.usersService.findById(Number(id));
+  getUserById(@Param('id', ParseIntPipe) id: number): UserEntity {
+    const user = this.usersService.findById(id);
+
+    if (!user) throw new NotFoundException();
+
+    return user;
   }
 
   @ApiCreatedResponse({ type: UserEntity })
+  @ApiBadRequestResponse()
   @Post()
   createUser(@Body() body: CreateUserDto): UserEntity {
     return this.usersService.createUser(body);
